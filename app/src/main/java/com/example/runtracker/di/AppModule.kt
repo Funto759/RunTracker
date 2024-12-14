@@ -3,6 +3,7 @@ package com.example.runtracker.di
 import android.app.Application
 import android.content.Context
 import androidx.room.Room
+import com.example.runtracker.dao.RunDAO
 import com.example.runtracker.dao.RunDatabase
 import dagger.Module
 import dagger.Provides
@@ -17,13 +18,16 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    @Singleton
     @Provides
-    fun provideRunDatabase(@ApplicationContext context: Context) = Room.databaseBuilder(
-        context, RunDatabase::class.java,"Run_Database"
-    )
-
     @Singleton
+    fun provideRunDatabase(@ApplicationContext context: Context): RunDatabase {
+       return Room.databaseBuilder(
+            context, RunDatabase::class.java, "Run_Database"
+        ).build()
+    }
     @Provides
-    fun provideRunDao(db: RunDatabase) =db.getDAO()
+    @Singleton
+    fun provideRunDao(database: RunDatabase): RunDAO{
+        return database.getDAO()
+    }
 }

@@ -1,4 +1,4 @@
-package com.example.runtracker
+package com.example.runtracker.di
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
