@@ -1,7 +1,10 @@
 package com.example.runtracker.ui.fragments
 
+import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import androidx.navigation.fragment.findNavController
 import com.example.runtracker.util.ViewBindingFragment
 import com.example.runtracker.databinding.FragmentSetupBinding
 
@@ -19,6 +22,29 @@ class SetupFragment : ViewBindingFragment<FragmentSetupBinding>() {
     }
 
     override fun run() {
-        TODO("Not yet implemented")
+        print("heyyy")
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return super.onCreateView(inflater, container, savedInstanceState)
+
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding.apply {
+            tvContinue.setOnClickListener {
+                findNavController().navigate(SetupFragmentDirections.actionSetupFragmentToRunFragment())
+            }
+        }
+
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
     }
 }

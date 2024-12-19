@@ -307,6 +307,7 @@ object Libs {
 
         // Lifecycle Components
         implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
+        implementation("androidx.lifecycle:lifecycle-service:2.6.1")
         implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
         implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.1")
 
