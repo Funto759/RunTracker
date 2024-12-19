@@ -3,6 +3,7 @@ package com.example.runtracker.services
 import android.annotation.SuppressLint
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
@@ -32,25 +33,69 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY
 import com.google.android.gms.maps.model.LatLng
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.internal.InjectedFieldSignature
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
 typealias Polyline = MutableList<LatLng>
 typealias Polylines = MutableList<Polyline>
-
+@AndroidEntryPoint
 class TrackingService : LifecycleService() {
 
     var isFirstRun = true
 
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
+    private val timeInSeconds = MutableLiveData<Long>()
+    private var isTimerEnabled = true
+    private var lapTime = 0L
+    private var totalTime = 0L
+    private var timeStarted = 0L
+    private var lastSecondTimeStamp = 0L
+    private var time = "00:00:00"
+
+    @Inject
+    lateinit var baseNotificationBuilder: NotificationCompat.Builder
+    @Inject
+    lateinit var currentNotificationBuilder: NotificationCompat.Builder
+
+
+
     companion object{
+        val timeInMilli = MutableLiveData<Long>()
         val isTracking = MutableLiveData<Boolean>()
         val pathPoint = MutableLiveData<Polylines>()
     }
 
+    fun startTimer() {
+        addPolyLine()
+        isTracking.postValue(true)
+        timeStarted = System.currentTimeMillis()
+        isTimerEnabled = true
+        CoroutineScope(Dispatchers.Main).launch {
+            while (isTracking.value!!) {
+                lapTime = System.currentTimeMillis() - timeStarted
+                timeInMilli.postValue(totalTime + lapTime)
+                if (timeInMilli.value!! > lastSecondTimeStamp + 1000L) {
+                    timeInSeconds.postValue(timeInSeconds.value!! + 1)
+                    lastSecondTimeStamp += 1000L
+                }
+                delay(50L)
+                }
+            totalTime += lapTime
+        }
+        }
+
     fun postInitialValues(){
         isTracking.postValue(false)
         pathPoint.postValue(mutableListOf())
+        timeInMilli.postValue(0L)
+        timeInSeconds.postValue(0L)
     }
 
     private fun addPolyLine() = pathPoint.value?.apply {
@@ -103,12 +148,14 @@ class TrackingService : LifecycleService() {
     }
     override fun onCreate() {
         super.onCreate()
+        currentNotificationBuilder = baseNotificationBuilder
         Timber.d("onCreate")
         postInitialValues()
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
         isTracking.observe(this, Observer {
             updateLocationRequest(it)
+            updateNotification(it)
         })
     }
 
@@ -128,7 +175,7 @@ class TrackingService : LifecycleService() {
                    } else{
                        Timber.d("Resuming service...")
                        print("Resuming service..")
-                       startForegroundService()
+                      startTimer()
                    }
                 }
 
@@ -149,35 +196,27 @@ class TrackingService : LifecycleService() {
 
   private fun pauseService(){
       isTracking.postValue(false)
+      isTimerEnabled = false
   }
 
     fun startForegroundService(){
-
-        addPolyLine()
-        isTracking.postValue(true)
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        timeInSeconds.observe(this, Observer{
+            val notification = currentNotificationBuilder.setContentText(TrackingUtility.getFormattedStopwatchTime(it * 1000L))
+        notificationManager.notify(Constants.NOTIFICATION_ID,notification.build())        })
+        startTimer()
+        isTracking.postValue(true)
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
             createNotificationChannel(notificationManager)
         }
 
-        val notificationBuilder = NotificationCompat.Builder(this, Constants.NOTIFICATION_CHANNEL_ID)
-            .setAutoCancel(false)
-            .setOngoing(true)
-            .setSmallIcon(R.drawable.ic_directions_run_black_24dp)
-            .setContentTitle("Running App")
-            .setContentText("00:00:00")
-            .setContentIntent(getMainActivityPendingIntent()).build()
 
-        startForeground(Constants.NOTIFICATION_ID, notificationBuilder)
+
+        startForeground(Constants.NOTIFICATION_ID, baseNotificationBuilder.build())
     }
 
-    fun getMainActivityPendingIntent(): PendingIntent {
-        return NavDeepLinkBuilder(this)
-            .setGraph(R.navigation.nav_graph) // Replace with your actual navigation graph
-            .setDestination(R.id.trackingFragment) // Replace with your actual TrackingFragment ID
-            .createPendingIntent()
-    }
 
 
 
@@ -190,4 +229,29 @@ class TrackingService : LifecycleService() {
         )
         notificationManager.createNotificationChannel(channel)
     }
+
+    fun updateNotification(isTracking: Boolean) {
+        val notificationActionState = if (isTracking) "Pause" else "Resume"
+        val pendingIntent = if (isTracking) {
+            val pauseIntent = Intent(this, TrackingService::class.java).apply {
+                action = Constants.ACTION_PAUSE_SERVICE
+                }
+            PendingIntent.getService(this,1,pauseIntent,FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE)
+            }else {
+                val resumeIntent = Intent(this, TrackingService::class.java).apply {
+                    action = Constants.ACTION_START_OR_RESUME_SERVICE
+                }
+            PendingIntent.getService(this,1,resumeIntent,FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE)
+            }
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        currentNotificationBuilder.javaClass.getDeclaredField("mActions").apply {
+            isAccessible = true
+            set(currentNotificationBuilder, ArrayList<NotificationCompat.Action>())
+        }
+        currentNotificationBuilder = baseNotificationBuilder
+            .addAction(R.drawable.ic_pause_black_24dp,notificationActionState,pendingIntent)
+        notificationManager.notify(Constants.NOTIFICATION_ID,currentNotificationBuilder.build())
+        }
 }

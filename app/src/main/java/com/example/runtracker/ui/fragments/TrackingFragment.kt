@@ -30,6 +30,7 @@ import com.example.runtracker.services.Polylines
 import com.example.runtracker.services.TrackingService
 import com.example.runtracker.util.Constants
 import com.example.runtracker.util.Constants.ACTION_START_OR_RESUME_SERVICE
+import com.example.runtracker.util.TrackingUtility
 import com.google.android.gms.maps.CameraUpdate
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -52,8 +53,11 @@ class TrackingFragment : ViewBindingFragment<FragmentTrackingBinding>() {
     private val viewModel by viewModels<RunViewModel>()
     var isTracking =false
   private var pathPoints = mutableListOf<MutableList<LatLng>>()
+    private var currentTimeInMillis = 0L
 
     private var map:GoogleMap? = null
+
+
 
     override fun getViewBinding(
         inflater: LayoutInflater,
@@ -108,6 +112,12 @@ class TrackingFragment : ViewBindingFragment<FragmentTrackingBinding>() {
             pathPoints = it
             addLatestPolyline()
             moveCameraToUser()
+        })
+
+        TrackingService.timeInMilli.observe(viewLifecycleOwner, Observer{
+            currentTimeInMillis = it
+            val time = TrackingUtility.getFormattedStopwatchTime(currentTimeInMillis,true)
+            binding.tvTimer.text = time
         })
     }
     fun runState(){
@@ -211,4 +221,6 @@ private fun updateTracking(isTracking: Boolean){
         super.onLowMemory()
         binding.mapView.onLowMemory()
     }
+
+
 }
