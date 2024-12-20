@@ -205,7 +205,14 @@ class TrackingService : LifecycleService() {
         isFirstRun = true
         pauseService()
         postInitialValues()
-        stopForeground(true)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+           stopForeground(STOP_FOREGROUND_REMOVE)
+
+        } else {
+    stopForeground(true)
+
+        }
         stopSelf()
     }
 
