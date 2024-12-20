@@ -48,6 +48,7 @@ typealias Polylines = MutableList<Polyline>
 class TrackingService : LifecycleService() {
 
     var isFirstRun = true
+    var serviceKilled = false
 
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
@@ -198,6 +199,15 @@ class TrackingService : LifecycleService() {
       isTracking.postValue(false)
       isTimerEnabled = false
   }
+
+    private fun stopService(){
+        serviceKilled = true
+        isFirstRun = true
+        pauseService()
+        postInitialValues()
+        stopForeground(true)
+        stopSelf()
+    }
 
     fun startForegroundService(){
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

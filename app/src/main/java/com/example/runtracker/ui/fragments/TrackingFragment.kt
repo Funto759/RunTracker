@@ -11,6 +11,9 @@ import android.os.Bundle
 import android.provider.CalendarContract
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
@@ -18,7 +21,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.PendingIntentCompat
 import androidx.core.app.ServiceCompat.startForeground
 import androidx.core.content.ContextCompat.getSystemService
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.example.runtracker.MainActivity
@@ -40,6 +45,7 @@ import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
@@ -84,6 +90,9 @@ class TrackingFragment : ViewBindingFragment<FragmentTrackingBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        if (isTracking){
+            setupCancelRunMenu()
+        }
         binding.mapView.onCreate(savedInstanceState)
         binding.btnToggleRun.setOnClickListener{
            runState()
@@ -223,4 +232,48 @@ private fun updateTracking(isTracking: Boolean){
     }
 
 
+    private fun setupCancelRunMenu() {
+        requireActivity().addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.tracking_toolbar_menu, menu)
+            }
+            override fun onPrepareMenu(menu: Menu) {
+                super.onPrepareMenu(menu)
+                val cancelRunMenuItem = menu.findItem(R.id.cancelRun)
+                cancelRunMenuItem.isVisible = true
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.cancelRun -> {
+                      createCancelRunAlertDialog()
+                        true
+                    }
+                    else -> false
+                }
+            }
+
+        }, viewLifecycleOwner, Lifecycle.State.STARTED) // Consider using STARTED
+    }
+
+    fun createCancelRunAlertDialog(){
+        val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.AlertDialogTheme)
+            .setTitle("Cancel a Run")
+            .setMessage("Are you sure you want to cancel a run")
+            .setPositiveButton("Yes"){
+                _,_ ->
+                stopRun()
+            }
+            .setNegativeButton("No"){
+                dialog,_ ->
+                dialog.cancel()
+            }
+            .create()
+        dialog.show()
+    }
+
+    private fun stopRun() {
+        startCommandService(Constants.ACTION_STOP_SERVICE)
+        findNavController().navigate(TrackingFragmentDirections.actionTrackingFragmentToRunFragment())
+    }
 }
