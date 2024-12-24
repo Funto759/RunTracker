@@ -17,6 +17,8 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatDialog
+import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.app.NotificationCompat
 import androidx.core.app.PendingIntentCompat
 import androidx.core.app.ServiceCompat.startForeground
@@ -62,6 +64,7 @@ class TrackingFragment : ViewBindingFragment<FragmentTrackingBinding>() {
     private var currentTimeInMillis = 0L
 
     private var map:GoogleMap? = null
+    private var menu:Menu?= null
 
 
 
@@ -90,12 +93,11 @@ class TrackingFragment : ViewBindingFragment<FragmentTrackingBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        if (isTracking){
-            setupCancelRunMenu()
-        }
+
         binding.mapView.onCreate(savedInstanceState)
         binding.btnToggleRun.setOnClickListener{
            runState()
+            setupCancelRunMenu()
             print("heyyfyyfyfyfyfyf")
             Timber.d("services")
         }
@@ -131,6 +133,8 @@ class TrackingFragment : ViewBindingFragment<FragmentTrackingBinding>() {
     }
     fun runState(){
         if (isTracking){
+            val cancelRunMenuItem = menu?.findItem(R.id.cancelRun)
+            cancelRunMenuItem?.isVisible = isTracking
             startCommandService(Constants.ACTION_PAUSE_SERVICE)
         } else {
             startCommandService(Constants.ACTION_START_OR_RESUME_SERVICE)
@@ -257,6 +261,7 @@ private fun updateTracking(isTracking: Boolean){
     }
 
     fun createCancelRunAlertDialog(){
+
         val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.AlertDialogTheme)
             .setTitle("Cancel a Run")
             .setMessage("Are you sure you want to cancel a run")

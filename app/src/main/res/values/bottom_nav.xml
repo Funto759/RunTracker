@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="BottomNavigationDarkTheme" parent="Widget.MaterialComponents.BottomNavigationView">
+        <item name="backgroundTint">@color/dark_background</item>
+        <item name="itemIconTint">@color/white</item>
+        <item name="itemTextColor">@color/white</item>
+    </style>
+
+</resources>

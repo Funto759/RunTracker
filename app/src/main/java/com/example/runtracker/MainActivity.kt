@@ -4,12 +4,15 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.example.runtracker.R.id.toolbar
 import com.example.runtracker.util.Constants
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -24,8 +27,10 @@ class MainActivity : AppCompatActivity() {
         navigateToTrackingFragment(intent)
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
         navController = navHostFragment.navController
-        setupActionBarWithNavController(navController)
-//        setSupportActionBar(findViewById(R.id.toolbar))
+//        setupActionBarWithNavController(navController)
+        val toolbar: Toolbar =  findViewById<MaterialToolbar>(toolbar)
+        setSupportActionBar(toolbar)
+        setSupportActionBar(findViewById(R.id.toolbar))
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
         bottomNavigationView.setupWithNavController(navController)
 
