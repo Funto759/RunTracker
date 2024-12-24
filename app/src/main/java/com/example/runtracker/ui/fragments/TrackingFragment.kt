@@ -27,9 +27,11 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import com.example.runtracker.MainActivity
 import com.example.runtracker.R
+import com.example.runtracker.dao.Run
 import com.example.runtracker.util.ViewBindingFragment
 import com.example.runtracker.databinding.FragmentTrackingBinding
 import com.example.runtracker.model.RunViewModel
@@ -46,10 +48,13 @@ import com.google.android.gms.maps.model.Dot
 import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
+import kotlin.math.round
 
 @Suppress("SameParameterValue")
 @AndroidEntryPoint
@@ -103,8 +108,10 @@ class TrackingFragment : ViewBindingFragment<FragmentTrackingBinding>() {
         }
         binding.apply {
             btnFinishRun.setOnClickListener{
-                findNavController().navigate(TrackingFragmentDirections.actionTrackingFragmentToRunFragment())
+
                 Timber.d("services")
+                moveCameraToFinalRun()
+                saveRunToDatabase()
             }
             mapView.getMapAsync{
                 map = it
@@ -158,6 +165,41 @@ private fun updateTracking(isTracking: Boolean){
                     16f
                 )
             )
+        }
+    }
+
+    private fun moveCameraToFinalRun(){
+        val bounds = LatLngBounds.Builder()
+        for (polyline in pathPoints){
+            for (pos in polyline){
+                bounds.include(pos)
+            }
+        }
+        map?.moveCamera(
+            CameraUpdateFactory.newLatLngBounds(
+                bounds.build(),
+                binding.mapView.width,
+                binding.mapView.height,
+                (binding.mapView.height * 0.05f).toInt()
+            )
+        )
+    }
+
+    private fun saveRunToDatabase(){
+        map?.snapshot{bm->
+            var distanceInMeters = 0
+            val weight = 80f
+            for (polyline in pathPoints){
+                distanceInMeters += TrackingUtility.calculatePolylineLength(polyline).toInt()
+
+            }
+            val avgSpeed = round((distanceInMeters / 1000f) / (currentTimeInMillis / 1000f / 60 / 60)*10)/10f
+            val dateTimestamp = java.util.Calendar.getInstance().timeInMillis
+            val caloriesBurned = ((distanceInMeters / 1000f) * weight).toInt()
+            val run = Run(bm,dateTimestamp,avgSpeed,currentTimeInMillis,distanceInMeters,caloriesBurned)
+            viewModel.insertRun(run)
+            Snackbar.make(requireActivity().findViewById(R.id.rootView), "Run saved successfully", Snackbar.LENGTH_LONG).show()
+            stopRun()
         }
     }
     private fun addAllPolyLine(){

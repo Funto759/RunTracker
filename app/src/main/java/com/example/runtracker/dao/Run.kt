@@ -14,5 +14,5 @@ data class Run(
     val distanceInMeters: Int =0,
     val caloriesBurned: Int =0,
     @PrimaryKey(autoGenerate = true)
-    val id : Int
+    val id : Int = 0
 )
