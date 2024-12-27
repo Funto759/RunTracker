@@ -12,7 +12,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.runtracker.R
+import com.example.runtracker.adapter.RunViewAdapter
 import com.example.runtracker.util.ViewBindingFragment
 import com.example.runtracker.databinding.FragmentRunBinding
 import com.example.runtracker.model.RunViewModel
@@ -26,6 +28,7 @@ import pub.devrel.easypermissions.EasyPermissions
 class RunFragment : ViewBindingFragment<FragmentRunBinding>(), EasyPermissions.PermissionCallbacks {
 
 private val viewmodel by viewModels<RunViewModel>()
+    private lateinit var runViewAdapter: RunViewAdapter
 
     override val LayoutId: Int
         get() = R.layout.fragment_run
@@ -39,7 +42,6 @@ private val viewmodel by viewModels<RunViewModel>()
 
     override fun run() {
         viewLifecycleOwner.lifecycleScope.launch{
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
                 viewmodel.stateRun.observe(viewLifecycleOwner){ state ->
                    when(state){
                        is RunViewModel.RunViewState.LOADING -> {
@@ -50,14 +52,13 @@ private val viewmodel by viewModels<RunViewModel>()
                            print("Error Occurred")
                        }
                        is RunViewModel.RunViewState.GETRUNS -> {
-                           print("print all ${state.run.size} ")
+                          runViewAdapter.submitList(state.run)
                        }
 
                        else -> {}
                    }
                 }
             }
-        }
     }
 
     override fun onCreateView(
@@ -70,7 +71,11 @@ private val viewmodel by viewModels<RunViewModel>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        requestPermissions()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            requestPermissions()
+        }
+        setupRecyclerView()
+        viewmodel.getAllRuns()
         binding.apply {
             fab.setOnClickListener{
                 findNavController().navigate(RunFragmentDirections.actionRunFragmentToTrackingFragment())
@@ -124,5 +129,11 @@ private val viewmodel by viewModels<RunViewModel>()
         grantResults: IntArray
     ) {
         EasyPermissions.onRequestPermissionsResult(requestCode,permissions,grantResults,this)
+    }
+
+    private fun setupRecyclerView() = binding.rvRuns.apply {
+        runViewAdapter = RunViewAdapter()
+        adapter = runViewAdapter
+        layoutManager = LinearLayoutManager(requireContext())
     }
 }

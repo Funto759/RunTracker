@@ -5,6 +5,8 @@ import android.content.Context
 import androidx.room.Room
 import com.example.runtracker.dao.RunDAO
 import com.example.runtracker.dao.RunDatabase
+import com.example.runtracker.dao.UserDAO
+import com.example.runtracker.dao.UserDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,7 +29,20 @@ object AppModule {
     }
     @Provides
     @Singleton
+    fun provideUserDatabase(@ApplicationContext context: Context): UserDatabase {
+       return Room.databaseBuilder(
+            context, UserDatabase::class.java, "User_Database"
+        ).build()
+    }
+    @Provides
+    @Singleton
     fun provideRunDao(database: RunDatabase): RunDAO{
+        return database.getDAO()
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserDao(database: UserDatabase): UserDAO{
         return database.getDAO()
     }
 }
