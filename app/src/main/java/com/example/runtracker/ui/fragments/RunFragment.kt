@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -77,6 +78,21 @@ private val viewmodel by viewModels<RunViewModel>()
         setupRecyclerView()
         viewmodel.getAllRuns()
         binding.apply {
+            spFilter.onItemSelectedListener= object : AdapterView.OnItemSelectedListener{
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    val selectedOption = parent?.getItemAtPosition(position).toString()
+                    handleSpinnerSelection(selectedOption)
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    TODO("Not yet implemented")
+                }
+            }
             fab.setOnClickListener{
                 findNavController().navigate(RunFragmentDirections.actionRunFragmentToTrackingFragment())
             }
@@ -135,5 +151,15 @@ private val viewmodel by viewModels<RunViewModel>()
         runViewAdapter = RunViewAdapter()
         adapter = runViewAdapter
         layoutManager = LinearLayoutManager(requireContext())
+    }
+
+    fun handleSpinnerSelection(option : String){
+        when(option){
+            "Date" -> {viewmodel.getAllRuns()}
+            "Running Time" -> {viewmodel.getAllRunsByTimeInMilli()}
+            "Distance" -> {viewmodel.getAllRunsByDistance()}
+            "Average Speed" -> {viewmodel.getAllRunsByAvgSpeed()}
+            "Calories Burned" -> {viewmodel.getAllRunsByCaloriesBurned()}
+        }
     }
 }

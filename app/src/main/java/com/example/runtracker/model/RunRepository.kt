@@ -18,10 +18,29 @@ class RunRepository @Inject constructor(val runDAO: RunDAO, val userDAO: UserDAO
             runDAO.getAllRuns()
         }
     }
-    suspend fun getUserDetails(): User {
+
+    suspend fun getAllRunsSortedByDistance(): List<Run> {
         Timber.d("Fetching runs from database...")
         return withContext(Dispatchers.IO) {
-            userDAO.getUserDetails()
+            runDAO.getAllRunsSortedByDistance()
+        }
+    }
+    suspend fun getAllRunsSortedByAvgSpeed(): List<Run> {
+        Timber.d("Fetching runs from database...")
+        return withContext(Dispatchers.IO) {
+            runDAO.getAllRunsSortedByAvgSpeed()
+        }
+    }
+    suspend fun getAllRunsSortedByTimeInMillis(): List<Run> {
+        Timber.d("Fetching runs from database...")
+        return withContext(Dispatchers.IO) {
+            runDAO.getAllRunsSortedByTimeInMillis()
+        }
+    }
+    suspend fun getUserDetails(id:Int): User {
+        Timber.d("Fetching runs from database...")
+        return withContext(Dispatchers.IO) {
+            userDAO.getUserDetails(id)
         }
     }
     suspend fun getRunsByDistance(): List<Run> {
@@ -57,21 +76,15 @@ class RunRepository @Inject constructor(val runDAO: RunDAO, val userDAO: UserDAO
 
     suspend fun insertUser(user: User) = userDAO.insertUser(user)
 
-    fun getTotalAvgSpeed() = runDAO.getTotalAvgSpeed()
+    fun getTotalAvgSpeed(): LiveData<Float> = runDAO.getTotalAvgSpeed()
 
-    fun getTotalDistance()= runDAO.getTotalDistance()
+    fun getTotalDistance():LiveData<Int> = runDAO.getTotalDistance()
 
-    fun getTotalCaloriesBurned() = runDAO.getTotalCaloriesBurned()
+    fun getTotalCaloriesBurned():LiveData<Int> = runDAO.getTotalCaloriesBurned()
 
-    fun getTotalTimeInMillis() = runDAO.getTotalTimeInMillis()
+    fun getTotalTimeInMillis():LiveData<Long> = runDAO.getTotalTimeInMillis()
 
-    fun getAllRunsSortedByDistance() = runDAO.getAllRunsSortedByDistance()
 
-    fun getAllRunsSortedByAvgSpeed() = runDAO.getAllRunsSortedByAvgSpeed()
-
-    fun getAllRunsSortedByCaloriesBurned() = runDAO.getAllRunsSortedByCaloriesBurned()
-
-    fun getAllRunsSortedByTimeInMillis() = runDAO.getAllRunsSortedByTimeInMillis()
 
 
 

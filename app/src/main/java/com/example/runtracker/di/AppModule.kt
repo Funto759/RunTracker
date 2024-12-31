@@ -29,11 +29,12 @@ object AppModule {
     }
     @Provides
     @Singleton
-    fun provideUserDatabase(@ApplicationContext context: Context): UserDatabase {
+    fun provideUsersDatabase(@ApplicationContext context: Context): UserDatabase{
        return Room.databaseBuilder(
-            context, UserDatabase::class.java, "User_Database"
+            context, UserDatabase::class.java, "Users_Database"
         ).build()
     }
+
     @Provides
     @Singleton
     fun provideRunDao(database: RunDatabase): RunDAO{

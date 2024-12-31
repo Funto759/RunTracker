@@ -16,6 +16,10 @@ class RunViewModel @Inject constructor(
 
     val stateRun = MutableLiveData<RunViewState>()
     val UserState = MutableLiveData<RunViewState>()
+    val totalTime = MutableLiveData<Long>()
+    val totalCalories = MutableLiveData<Int>()
+    val totalDistance = MutableLiveData<Int>()
+    val totalAvgSpeed = MutableLiveData<Float>()
 
      fun getAllRuns(){
          RunViewState.LOADING(true)
@@ -29,11 +33,11 @@ class RunViewModel @Inject constructor(
             }
         }
     }
-    fun getUserDetails(){
+    fun getUserDetails(id:Int){
          RunViewState.LOADING(true)
         viewModelScope.launch{
             try {
-                val result = repository.getUserDetails()
+                val result = repository.getUserDetails(id)
                 UserState.postValue(RunViewState.USERDETAILS(result))
                 RunViewState.LOADING(false)
             }catch (e: Exception){
@@ -72,7 +76,7 @@ class RunViewModel @Inject constructor(
          RunViewState.LOADING(true)
         viewModelScope.launch{
             try {
-                val result = repository.getAllRunsSortedByCaloriesBurned()
+                val result = repository.getRunsByCaloriesBurned()
                 stateRun.postValue(RunViewState.GETRUNS(result))
                 RunViewState.LOADING(false)
             }catch (e: Exception){
@@ -93,6 +97,8 @@ class RunViewModel @Inject constructor(
             }
         }
     }
+
+
 
  fun deleteRun(run: Run){
      RunViewState.LOADING(true)

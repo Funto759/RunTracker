@@ -16,7 +16,7 @@ interface UserDAO {
     @Delete
     suspend fun deleteRun(user: User): Int
 
-    @Query("SELECT * FROM user_table")
-    fun getUserDetails(): User
+    @Query("SELECT * FROM user_table WHERE id = :id")
+    fun getUserDetails(id : Int): User
 
 }
