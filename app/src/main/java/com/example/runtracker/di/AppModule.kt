@@ -2,6 +2,7 @@ package com.example.runtracker.di
 
 import android.app.Application
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import androidx.room.Room
 import com.example.runtracker.dao.RunDAO
 import com.example.runtracker.dao.RunDatabase
@@ -34,6 +35,14 @@ object AppModule {
             context, UserDatabase::class.java, "Users_Database"
         ).build()
     }
+
+    @Singleton
+    @Provides
+    fun provideSharedPref(@ApplicationContext app: Context)  =
+        app.getSharedPreferences("myPref",MODE_PRIVATE)
+
+
+
 
     @Provides
     @Singleton

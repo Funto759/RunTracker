@@ -1,5 +1,6 @@
 package com.example.runtracker.ui.fragments
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,11 +12,14 @@ import com.example.runtracker.dao.User
 import com.example.runtracker.util.ViewBindingFragment
 import com.example.runtracker.databinding.FragmentSettingsBinding
 import com.example.runtracker.model.RunViewModel
+import com.example.runtracker.util.Constants
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.internal.InjectedFieldSignature
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class SettingsFragment : ViewBindingFragment<FragmentSettingsBinding>() {
@@ -24,12 +28,20 @@ class SettingsFragment : ViewBindingFragment<FragmentSettingsBinding>() {
 
     private val viewmodel by viewModels<RunViewModel>()
 
+    @Inject
+    lateinit var sharedPreferences: SharedPreferences
+
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewmodel.getUserDetails(1)
         binding.apply{
 
+           val name = sharedPreferences.getString(Constants.KEY_NAME,"") ?: ""
+           val weight = sharedPreferences.getFloat(Constants.KEY_WEIGHT,80f)
+            etName.setText(name)
+            etWeight.setText(weight.toString())
 
             btnApplyChanges.setOnClickListener {
               changeUserDetailsDialog()
@@ -55,10 +67,11 @@ class SettingsFragment : ViewBindingFragment<FragmentSettingsBinding>() {
                     etWeight.clearFocus()
 
                     val name = etName.text.toString().trim()
-                    val weight = etWeight.text.toString().trim()
-                    val user = User(name,weight,1)
-                    Snackbar.make(requireView(),"User details changed successfully", Snackbar.LENGTH_SHORT).show()
-                    viewmodel.insertUser(user)
+                    val weight = etWeight.text.toString().toFloat()
+                    sharedPreferences.edit()
+                        .putString(Constants.KEY_NAME,name)
+                        .putFloat(Constants.KEY_WEIGHT,weight.toFloat())
+                        .apply()
                 }
             }
             .setNegativeButton("No"){dialog,_ ->
@@ -68,30 +81,31 @@ class SettingsFragment : ViewBindingFragment<FragmentSettingsBinding>() {
     }
 
     override fun run() {
-        viewLifecycleOwner.lifecycleScope.launch{
-            viewmodel.UserState.observe(viewLifecycleOwner){ state ->
-                when(state){
-                    is RunViewModel.RunViewState.LOADING -> {
-                        print("loading")
-                    }
-
-                    is RunViewModel.RunViewState.ERROR -> {
-                        print("Error Occurred")
-                    }
-                    is RunViewModel.RunViewState.USERDETAILS-> {
-                        binding.apply {
-                            etName.setText(state.user.name)
-                            etWeight.setText(state.user.weight)
-                            Timber.d("name = ${state.user.name}")
-                            Timber.d("weight = ${state.user.weight}")
-//                            tilName.editText?.setText(state.user.name)
-//                            tilWeight.editText?.setText(state.user.weight)
-                        }
-                    }
-
-                    else -> {}
-                }
-            }
-        }
+        Timber.d("logg")
+//        viewLifecycleOwner.lifecycleScope.launch{
+//            viewmodel.UserState.observe(viewLifecycleOwner){ state ->
+//                when(state){
+//                    is RunViewModel.RunViewState.LOADING -> {
+//                        print("loading")
+//                    }
+//
+//                    is RunViewModel.RunViewState.ERROR -> {
+//                        print("Error Occurred")
+//                    }
+//                    is RunViewModel.RunViewState.USERDETAILS-> {
+//                        binding.apply {
+//                            etName.setText(state.user.name)
+//                            etWeight.setText(state.user.weight)
+//                            Timber.d("name = ${state.user.name}")
+//                            Timber.d("weight = ${state.user.weight}")
+////                            tilName.editText?.setText(state.user.name)
+////                            tilWeight.editText?.setText(state.user.weight)
+//                        }
+//                    }
+//
+//                    else -> {}
+//                }
+//            }
+//        }
     }
 }

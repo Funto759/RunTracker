@@ -44,25 +44,38 @@ class StatisticsFragment : ViewBindingFragment<FragmentStatisticsBinding>(){
         viewLifecycleOwner.lifecycleScope.launch{
             viewModel.totalTime.observe(viewLifecycleOwner, Observer{
                 Timber.d(it.toString())
-                binding.tvTotalTime.text = convertMilliToTime(it)
+                if (it != null){
+                    binding.tvTotalTime.text = convertMilliToTime(it)
+                }
+
             })
         }
         viewLifecycleOwner.lifecycleScope.launch{
             viewModel.totalAvgSpeed.observe(viewLifecycleOwner, Observer{
                 Timber.d(it.toString())
-                binding.tvAverageSpeed.text = String.format(Locale.getDefault(),"%.2f",it.toFloat())
+                if (it != null){
+                    val km = it / 1000f
+                    binding.tvAverageSpeed.text = String.format(Locale.getDefault(),"%.2f",it.toFloat())
+                }
+
             })
         }
         viewLifecycleOwner.lifecycleScope.launch{
             viewModel.totalDistance.observe(viewLifecycleOwner, Observer{
                 Timber.d(it.toString())
-                binding.tvTotalDistance.text = String.format(Locale.getDefault(),"%.2f",it.toFloat())
+                if (it != null){
+                    val km = it / 1000f
+                    binding.tvTotalDistance.text = String.format(Locale.getDefault(),"%.2f",km)
+                }
             })
         }
         viewLifecycleOwner.lifecycleScope.launch{
             viewModel.totalCalories.observe(viewLifecycleOwner, Observer{
                 Timber.d(it.toString())
-                binding.tvTotalCalories.text = String.format(Locale.getDefault(),"%.2f",it.toFloat())
+                if (it != null){
+                    binding.tvTotalCalories.text = String.format(Locale.getDefault(),"%.2f",it.toFloat())
+                }
+
             })
         }
     }
